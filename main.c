@@ -46,7 +46,7 @@ static uint8_t tx[] = {
 		0xF0, 0x0D,
 	};
 
-/*static void transfer(int fd)
+static void transfer(int fd)
 {
 	int ret;
 	uint8_t rx[ARRAY_SIZE(tx)] = {0, };
@@ -69,7 +69,7 @@ static uint8_t tx[] = {
 		printf("%.2X ", rx[ret]);
 	}
 	puts("");
-}*/
+}
 
 static void parse_data(int argc, char *argv[])
 {
@@ -174,12 +174,12 @@ static void parse_opts(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 	int ret = 0;
-	//int fd;
+	int fd;
 
 	parse_opts(argc, argv);
 	if (i < argc) parse_data(argc, argv);
 
-	/*fd = open(device, O_RDWR);
+	fd = open(device, O_RDWR);
 	if (fd < 0)
 		pabort("can't open device");
 
@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
 
 	ret = ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
 	if (ret == -1)
-		pabort("can't get max speed hz");*/
+		pabort("can't get max speed hz");
 
 	if (len == 0)
 		len = ARRAY_SIZE(tx);
@@ -224,9 +224,9 @@ int main(int argc, char *argv[])
 		printf("%.2X ", tx[ret]);
 	}
 
-	/*transfer(fd);
+	transfer(fd);
 
-	close(fd);*/
+	close(fd);
 
 	return ret;
 }
