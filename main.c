@@ -23,11 +23,11 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
-/*static void pabort(const char *s)
+static void pabort(const char *s)
 {
 	perror(s);
 	abort();
-}*/
+}
 
 static const char *device = "/dev/spidev1.1";
 static uint8_t mode;
@@ -36,6 +36,8 @@ static uint32_t speed = 500000;
 static uint16_t delay;
 static int i = 0;
 static int len = 0;
+static uint8_t quiet = 0;
+static uint8_t byteline = 0;
 static uint8_t tx[] = {
 		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 		0x40, 0x00, 0x00, 0x00, 0x00, 0x95,
@@ -63,12 +65,16 @@ static void transfer(int fd)
 	if (ret < 1)
 		pabort("can't send spi message");
 
-	for (ret = 0; ret < len; ret++) {
-		if (!(ret % 6))
-			puts("");
-		printf("%.2X ", rx[ret]);
+	if (!quiet)
+	{
+		printf("Send data\n");
+		for (ret = 0; ret < len; ret++) {
+			if (!(ret % 6))
+				puts("");
+			printf("%.2X ", rx[ret]);
+		}
 	}
-	puts("");
+	puts("\n");
 }
 
 static void parse_data(int argc, char *argv[])
@@ -97,7 +103,9 @@ static void print_usage(const char *prog)
 	     "  -O --cpol     clock polarity\n"
 	     "  -L --lsb      least significant bit first\n"
 	     "  -C --cs-high  chip select active high\n"
-	     "  -3 --3wire    SI/SO signals shared\n");
+	     "  -3 --3wire    SI/SO signals shared\n"
+	     "  -1 --line     print byte per line\n"
+	     "  -q --quiet    print only received data\n");
 	exit(1);
 }
 
@@ -117,11 +125,13 @@ static void parse_opts(int argc, char *argv[])
 			{ "3wire",   0, 0, '3' },
 			{ "no-cs",   0, 0, 'N' },
 			{ "ready",   0, 0, 'R' },
+			{ "line",    0, 0, '1' },
+			{ "quiet",   0, 0, 'q' },
 			{ NULL, 0, 0, 0 },
 		};
 		int c;
 
-		c = getopt_long(argc, argv, "D:s:d:b:lHOLC3NR", lopts, NULL);
+		c = getopt_long(argc, argv, "D:s:d:b:lHOLC3NRq1", lopts, NULL);
 
 		i++;
 		if (c == -1)
@@ -163,6 +173,12 @@ static void parse_opts(int argc, char *argv[])
 			break;
 		case 'R':
 			mode |= SPI_READY;
+			break;
+		case '1':
+			byteline = 1;
+			break;
+		case 'q':
+			quiet = 1;
 			break;
 		default:
 			print_usage(argv[0]);
@@ -213,15 +229,20 @@ int main(int argc, char *argv[])
 	if (len == 0)
 		len = ARRAY_SIZE(tx);
 	
-	printf("spi mode: %d\n", mode);
-	printf("bits per word: %d\n", bits);
-	printf("max speed: %d Hz (%d KHz)\n", speed, speed/1000);
-	printf("data len: %d\n", len);
-        
-        for (ret = 0; ret < len; ret++) {
-		if (!(ret % 6))
-			puts("");
-		printf("%.2X ", tx[ret]);
+	if (!quiet)
+	{
+		printf("spi mode: %d\n", mode);
+		printf("bits per word: %d\n", bits);
+		printf("max speed: %d Hz (%d KHz)\n", speed, speed/1000);
+		printf("data len: %d\n", len);
+        }
+
+	if (!quiet) printf("Received data\n");
+        for (ret = 0; ret < len; ret++)
+	{
+		if (!(ret % 6)) puts("");
+		if (!byteline) printf("%.2X ", tx[ret]);
+		else printf("%.2X\n", tx[ret]);
 	}
 
 	transfer(fd);
