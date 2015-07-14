@@ -65,7 +65,7 @@ static void transfer(int fd)
 	if (ret < 1)
 		pabort("can't send spi message");
 
-	if (!quiet) printf("\nReceived data\n");
+	printf("\nReceived data\n");
 	for (ret = 0; ret < len; ret++) {
 		if (!(ret % 6))
 			puts("");
